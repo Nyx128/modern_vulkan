@@ -3,3 +3,5 @@ build/
 *.vcxproj
 *.vcxproj.user
 *.sln
+*.ini
+*.filters
