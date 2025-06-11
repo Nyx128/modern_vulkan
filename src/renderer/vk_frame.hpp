@@ -2,12 +2,13 @@
 
 #include "../core/vk_ctx.hpp"
 #include "vk_shader.hpp"
+#include "../gui/gui_ctx.hpp"
 
 #include <memory>
 
 class VkFrame {
 public:
-	VkFrame(VkCtx& _ctx, vk::CommandBuffer _command_buffer);
+	VkFrame(VkCtx& _ctx, GuiCtx& _gui_ctx, vk::CommandBuffer _command_buffer);
 	~VkFrame();
 
 	VkFrame(const VkFrame&) = delete;
@@ -31,6 +32,7 @@ private:
 	void set_render_params();
 private:
 	VkCtx& ctx;
+	GuiCtx& gui_ctx;
 
 	vk::CommandBuffer command_buffer;
 

@@ -66,7 +66,7 @@ void VkCtx::init_instance(){
     vk::ApplicationInfo app_info{
         "modernvk", 1,
         nullptr, 0,
-        VK_API_VERSION_1_3
+        api_version
     };
 
     auto vkGetInstanceProcAddr = dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");

@@ -2,7 +2,10 @@
 #include "image_ops.hpp"
 #include <iostream>
 
-VkFrame::VkFrame(VkCtx& _ctx, vk::CommandBuffer _command_buffer):ctx(_ctx), command_buffer(_command_buffer){
+#include "imgui.h"
+
+VkFrame::VkFrame(VkCtx& _ctx, GuiCtx& _gui_ctx, vk::CommandBuffer _command_buffer)
+	:ctx(_ctx), gui_ctx(_gui_ctx), command_buffer(_command_buffer){
 	auto device = ctx.get_device();
 	vk::FenceCreateInfo fence_info;
 	fence_info.flags = vk::FenceCreateFlagBits::eSignaled;
@@ -14,7 +17,7 @@ VkFrame::VkFrame(VkCtx& _ctx, vk::CommandBuffer _command_buffer):ctx(_ctx), comm
 
 void VkFrame::record_command_buffer(uint32_t img_index, std::unique_ptr<VkShader>& shader){
 	auto device = ctx.get_device();
-
+	gui_ctx.new_frame();
 	command_buffer.reset();
 	init_color_attachment(img_index);
 	init_render_info();
@@ -30,6 +33,8 @@ void VkFrame::record_command_buffer(uint32_t img_index, std::unique_ptr<VkShader
 
 	set_render_params();
 	command_buffer.beginRenderingKHR(render_info);
+	ImGui::ShowDemoWindow();
+	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
 	vk::ShaderStageFlagBits stages[2] = {
 		vk::ShaderStageFlagBits::eVertex,
@@ -45,12 +50,24 @@ void VkFrame::record_command_buffer(uint32_t img_index, std::unique_ptr<VkShader
 	command_buffer.setVertexInputEXT(0, nullptr, 0, nullptr);
 
 	command_buffer.draw(3, 1, 0, 0);
+	gui_ctx.end_frame();
+	command_buffer.endRendering();
+
+	color_attachment.setLoadOp(vk::AttachmentLoadOp::eLoad);
+	render_info.setColorAttachments(color_attachment)
+		.setPDepthAttachment(nullptr);
+
+	command_buffer.beginRendering(render_info);
+	gui_ctx.render(command_buffer);
+
 	command_buffer.endRendering();
 
 	transition_image_layout(command_buffer, img,
 		vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR,
 		vk::AccessFlagBits::eColorAttachmentWrite, vk::AccessFlagBits::eNone,
 		vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eBottomOfPipe);
+
+
 
 	command_buffer.end();
 }
@@ -78,7 +95,7 @@ void VkFrame::init_color_attachment(uint32_t img_index){
 	color_attachment.setImageLayout(vk::ImageLayout::eAttachmentOptimal);
 	color_attachment.setLoadOp(vk::AttachmentLoadOp::eClear);
 	color_attachment.setStoreOp(vk::AttachmentStoreOp::eStore);
-	color_attachment.setClearValue(vk::ClearValue({ 0.5f, 0.0f, 0.25f, 1.0f }));
+	color_attachment.setClearValue(vk::ClearValue({ 0.01f, 0.01f, 0.02f, 1.0f }));
 }
 
 void VkFrame::set_render_params(){

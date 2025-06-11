@@ -1,3 +1,4 @@
+#pragma once
 #include <SDL.h>
 #include <SDL_vulkan.h>
 #include <vector>
@@ -33,8 +34,12 @@ public:
 
     void clean();
 
+    void set_gui_context(void* _gui_ctx);
+
 private:
     SDL_Window* window = nullptr;
     std::vector<bool> keyStates;
     bool shouldClose = false;
+
+    void* gui_ctx;
 };

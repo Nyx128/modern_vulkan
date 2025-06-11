@@ -1,7 +1,7 @@
 #include "vk_renderer.hpp"
 #include <chrono>
 
-VkRenderer::VkRenderer(VkCtx& _ctx):ctx(_ctx) {
+VkRenderer::VkRenderer(VkCtx& _ctx, GuiCtx& _gui_ctx):ctx(_ctx), gui_ctx(_gui_ctx) {
 	tri_shader = std::make_unique<VkShader>("src/shaders/triangle.vert.spv", "src/shaders/triangle.frag.spv", ctx);
 
 	std::vector<vk::Image> swapchain_images = device.getSwapchainImagesKHR(swapchain);
@@ -13,7 +13,7 @@ VkRenderer::VkRenderer(VkCtx& _ctx):ctx(_ctx) {
 	render_pool = device.createCommandPool(pool_ci);
 
 	for (int i = 0;i < swapchain_images.size();i++) {
-		swapchain_frames.emplace_back(ctx, ctx.create_pcommand_buffer(render_pool));
+		swapchain_frames.emplace_back(ctx, gui_ctx, ctx.create_pcommand_buffer(render_pool));
 	}
 
 	init_present_semaphores();
@@ -121,7 +121,7 @@ void VkRenderer::handle_invalid_swapchain(){
 
 	std::vector<vk::Image> swapchain_images = device.getSwapchainImagesKHR(swapchain);
 	for (int i = 0;i < swapchain_images.size();i++) {
-		swapchain_frames.emplace_back(ctx, ctx.create_pcommand_buffer(render_pool));
+		swapchain_frames.emplace_back(ctx, gui_ctx, ctx.create_pcommand_buffer(render_pool));
 	}
 
 	init_present_semaphores();

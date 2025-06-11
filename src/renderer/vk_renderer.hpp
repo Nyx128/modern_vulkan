@@ -1,10 +1,11 @@
 #pragma once
 #include "vk_frame.hpp"
 #include "vk_shader.hpp"
+#include "../gui/gui_ctx.hpp"
 
 class VkRenderer {
 public:
-	VkRenderer(VkCtx& _ctx);
+	VkRenderer(VkCtx& _ctx, GuiCtx& gui_ctx);
 	~VkRenderer();
 
 	VkRenderer(const VkRenderer&) = delete;
@@ -32,9 +33,11 @@ private:
 	vk::Device device = ctx.get_device();
 	vk::SwapchainKHR swapchain = ctx.get_swapchain();
 
-	const int flight_frames = 1;
+	const int flight_frames = 2;
 
 	uint32_t frame_index = 0;
 
 	int render_timeout = UINT64_MAX;
+
+	GuiCtx& gui_ctx;
 };

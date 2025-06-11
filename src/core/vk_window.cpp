@@ -1,6 +1,9 @@
 #include "vk_window.hpp"
+#include "backends/imgui_impl_sdl2.h"
 
 #include <stdexcept>
+
+#include "../gui/gui_ctx.hpp"
 
 VkWindow::VkWindow(const std::string& title, int width, int height){
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -31,6 +34,10 @@ void VkWindow::clean() {
     SDL_Quit();
 }
 
+void VkWindow::set_gui_context(void* _gui_ctx){
+    gui_ctx = _gui_ctx;
+}
+
 VkWindow::~VkWindow(){
     
 }
@@ -38,6 +45,7 @@ VkWindow::~VkWindow(){
 void VkWindow::pollEvents(){
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
+        reinterpret_cast<GuiCtx*>(gui_ctx)->process_events(event);
         //input handling
         if (event.type == SDL_KEYDOWN && !event.key.repeat) {
             keyStates[event.key.keysym.scancode] = true;

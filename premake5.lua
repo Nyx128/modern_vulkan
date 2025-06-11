@@ -14,12 +14,21 @@ project "base"
     targetdir ("build/%{cfg.buildcfg}")
     objdir ("build/obj/%{cfg.buildcfg}")
 
-    files { "src/**.h", "src/**.cpp" }
+    files { "src/**.hpp",
+	    "src/**.cpp",
+	    "src/**.h",
+	    "imgui/*.h",
+    	    "imgui/*.cpp",
+            "imgui/backends/imgui_impl_vulkan.h",
+            "imgui/backends/imgui_impl_vulkan.cpp",
+            "imgui/backends/imgui_impl_sdl2.h",
+            "imgui/backends/imgui_impl_sdl2.cpp" }
 
     includedirs {
         "%{os.getenv('VULKAN_SDK')}/Include",           -- Vulkan headers
         "%{os.getenv('VULKAN_SDK')}/Include/SDL2",      -- SDL2 headers
-        "%{os.getenv('VULKAN_SDK')}/Include/glm"        -- GLM headers
+        "%{os.getenv('VULKAN_SDK')}/Include/glm",        -- GLM headers
+	"imgui"
     }
 
     libdirs {

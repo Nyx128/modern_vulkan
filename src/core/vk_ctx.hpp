@@ -18,8 +18,11 @@ public:
     VkCtx(SDL_Window* _window, std::string _app_name);
     ~VkCtx();
 
+    inline uint32_t get_api_version() { return api_version; }
+
     inline vk::Instance& get_instance() { return instance; }
     inline vk::SurfaceKHR& get_surface() { return surface; }
+    inline vk::PhysicalDevice& get_physical() { return physical_device; }
     inline vk::Device& get_device() { return device; }
     inline vk::Queue& get_graphics_queue() { return graphics_queue; }
     inline vk::Queue& get_compute_queue() { return compute_queue; }
@@ -53,6 +56,8 @@ private:
 private:
     std::string app_name;
     SDL_Window* window;
+
+    const uint32_t api_version = VK_API_VERSION_1_3;
 
     //never ever am i loading functions c style
     vk::detail::DynamicLoader dl;

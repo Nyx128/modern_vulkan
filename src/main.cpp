@@ -9,11 +9,14 @@
 #include "core/vk_ctx.hpp"
 #include "renderer/vk_renderer.hpp"
 
-void run(VkWindow& window, std::atomic<bool>* done) {
+void run(VkWindow& window, std::atomic<bool>* done, std::atomic<bool>* gui_set) {
     try {
 
         VkCtx context(window.getSDLWindow(), "modernvk");
-        VkRenderer renderer(context);
+        GuiCtx gui_ctx{ window, context };
+        VkRenderer renderer(context, gui_ctx);
+        window.set_gui_context(&gui_ctx);//a bit hacky but works well enough
+        *gui_set = true;
 
         while (!*done) {
            renderer.render();
@@ -32,7 +35,10 @@ int main(int argc, char* argv[]) {
     VkWindow window("modernvk", 1280, 720);
     try {
         std::atomic<bool> done = false;
-        std::thread render_thread(run, window, &done);
+        std::atomic<bool> gui_set = false;
+        std::thread render_thread(run, window, &done, &gui_set);
+
+        while(!gui_set){}
 
         while (!window.windowShouldClose()) {
             window.pollEvents();
@@ -46,6 +52,6 @@ int main(int argc, char* argv[]) {
     }
     catch (std::exception e) {
         std::cerr << e.what() << std::endl;
-        return EXIT_FAILURE;        
+        return EXIT_FAILURE;
     }
 }
