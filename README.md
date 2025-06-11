@@ -36,7 +36,7 @@ A demo application showcasing **modern Vulkan** capabilities. This project serve
 ### 1. Clone the repo with submodules
 
 ```bash
-git clone --recurse-submodules https://github.com/your_username/modern_vulkan.git
+git clone --recurse-submodules https://github.com/Nyx128/modern_vulkan.git
 ```
 
 If you already cloned it without `--recurse-submodules`:
