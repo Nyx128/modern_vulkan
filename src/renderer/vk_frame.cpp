@@ -1,37 +1,28 @@
 #include "vk_frame.hpp"
 #include "image_ops.hpp"
+#include <iostream>
 
-VkFrame::VkFrame(vk::Image& _img, VkCtx& _ctx)
-	:img(_img), ctx(_ctx){
-
+VkFrame::VkFrame(VkCtx& _ctx, vk::CommandBuffer _command_buffer):ctx(_ctx), command_buffer(_command_buffer){
 	auto device = ctx.get_device();
+	vk::FenceCreateInfo fence_info;
+	fence_info.flags = vk::FenceCreateFlagBits::eSignaled;
+	render_fence = device.createFence(fence_info);
 
-	vk::ImageViewCreateInfo img_view_ci;
-	img_view_ci.image = img;
-	img_view_ci.viewType = vk::ImageViewType::e2D;
-	img_view_ci.format = ctx.get_swapchain_format();
-	img_view_ci.components.r = vk::ComponentSwizzle::eIdentity;
-	img_view_ci.components.g = vk::ComponentSwizzle::eIdentity;
-	img_view_ci.components.b = vk::ComponentSwizzle::eIdentity;
-	img_view_ci.components.a = vk::ComponentSwizzle::eIdentity;
-	img_view_ci.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-	img_view_ci.subresourceRange.baseMipLevel = 0;
-	img_view_ci.subresourceRange.levelCount = 1;
-	img_view_ci.subresourceRange.baseArrayLayer = 0;
-	img_view_ci.subresourceRange.layerCount = 1;
-
-	img_view = device.createImageView(img_view_ci);
+	vk::SemaphoreCreateInfo semaphore_info;
+	image_semaphore = device.createSemaphore(semaphore_info);
 }
 
-void VkFrame::set_command_buffer(vk::CommandBuffer _command_buffer, std::unique_ptr<VkShader>& shader){
+void VkFrame::record_command_buffer(uint32_t img_index, std::unique_ptr<VkShader>& shader){
 	auto device = ctx.get_device();
-	command_buffer = _command_buffer;
 
-	init_color_attachment();
+	command_buffer.reset();
+	init_color_attachment(img_index);
 	init_render_info();
 
 	vk::CommandBufferBeginInfo begin_info;
 	command_buffer.begin(begin_info);
+
+	auto img = ctx.get_swapchain_images()[img_index];
 
 	transition_image_layout(command_buffer, img, vk::ImageLayout::eUndefined,
 		vk::ImageLayout::eColorAttachmentOptimal, vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
@@ -51,6 +42,7 @@ void VkFrame::set_command_buffer(vk::CommandBuffer _command_buffer, std::unique_
 	};
 
 	command_buffer.bindShadersEXT(stages, shaders);
+	command_buffer.setVertexInputEXT(0, nullptr, 0, nullptr);
 
 	command_buffer.draw(3, 1, 0, 0);
 	command_buffer.endRendering();
@@ -65,8 +57,9 @@ void VkFrame::set_command_buffer(vk::CommandBuffer _command_buffer, std::unique_
 
 void VkFrame::clean(vk::CommandPool& pool) {
 	auto device = ctx.get_device();
+	device.destroyFence(render_fence);
+	device.destroySemaphore(image_semaphore);
 	device.freeCommandBuffers(pool, 1, &command_buffer);
-	device.destroyImageView(img_view);
 }
 
 void VkFrame::init_render_info(){
@@ -80,8 +73,8 @@ void VkFrame::init_render_info(){
 	render_info.setColorAttachments(color_attachment);
 }
 
-void VkFrame::init_color_attachment(){
-	color_attachment.setImageView(img_view);
+void VkFrame::init_color_attachment(uint32_t img_index){
+	color_attachment.setImageView(ctx.get_swapchain_views()[img_index]);
 	color_attachment.setImageLayout(vk::ImageLayout::eAttachmentOptimal);
 	color_attachment.setLoadOp(vk::AttachmentLoadOp::eClear);
 	color_attachment.setStoreOp(vk::AttachmentStoreOp::eStore);

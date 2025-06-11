@@ -26,14 +26,19 @@ VkWindow::VkWindow(const std::string& title, int width, int height){
     keyStates.resize(SDL_NUM_SCANCODES, false);
 }
 
-VkWindow::~VkWindow(){
-    if (window) SDL_DestroyWindow(window);
+void VkWindow::clean() {
+    SDL_DestroyWindow(window);
     SDL_Quit();
+}
+
+VkWindow::~VkWindow(){
+    
 }
 
 void VkWindow::pollEvents(){
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
+        //input handling
         if (event.type == SDL_KEYDOWN && !event.key.repeat) {
             keyStates[event.key.keysym.scancode] = true;
         }

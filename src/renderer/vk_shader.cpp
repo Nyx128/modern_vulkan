@@ -46,6 +46,7 @@ VkShader::VkShader(std::string _vertex_filename, std::string _fragment_filename,
 
 VkShader::~VkShader(){
 	auto device = ctx.get_device();
+	device.waitIdle();
 	device.destroyShaderEXT(vertex_shader);
 	device.destroyShaderEXT(fragment_shader);
 }

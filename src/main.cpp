@@ -9,25 +9,40 @@
 #include "core/vk_ctx.hpp"
 #include "renderer/vk_renderer.hpp"
 
-void run() {
-    VkWindow window("modernvk", 1280, 720);
+void run(VkWindow& window, std::atomic<bool>* done) {
+    try {
 
-    VkCtx context(window.getSDLWindow(), "modernvk");
-    VkRenderer renderer(context);
+        VkCtx context(window.getSDLWindow(), "modernvk");
+        VkRenderer renderer(context);
 
-    while (!window.windowShouldClose()) {
-        
-        renderer.render();
-        window.pollEvents();
+        while (!*done) {
+           renderer.render();
+
+        }
+    }
+    catch (std::exception e) {
+        std::cerr << e.what() << std::endl;
+        return;
     }
 
-    context.get_device().waitIdle();
 }
 
 int main(int argc, char* argv[]) {
     
-    try { 
-        run();
+    VkWindow window("modernvk", 1280, 720);
+    try {
+        std::atomic<bool> done = false;
+        std::thread render_thread(run, window, &done);
+
+        while (!window.windowShouldClose()) {
+            window.pollEvents();
+        }
+
+        done = true;
+        render_thread.join();
+        window.clean();
+        //for some reason, it gets stuck when attempting
+        //clean in the destructor so i call it manually here
     }
     catch (std::exception e) {
         std::cerr << e.what() << std::endl;

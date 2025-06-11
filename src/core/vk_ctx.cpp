@@ -12,7 +12,7 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
         VkDebugUtilsMessageTypeFlagsEXT messageType,
         const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
         void* pUserData){
-        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+        std::cerr << "validation layer: " << pCallbackData->pMessage << "\n\n" << std::endl;
         return VK_FALSE;
     }
 #endif
@@ -28,7 +28,9 @@ VkCtx::VkCtx(SDL_Window* _window, std::string _app_name):app_name(_app_name), wi
 
 VkCtx::~VkCtx() {
     device.waitIdle();
-
+    for (int i = 0; i < swapchain_views.size();i++) {
+        device.destroyImageView(swapchain_views[i]);
+    }
     device.destroySwapchainKHR(swapchain);
     device.destroy();
     instance.destroySurfaceKHR(surface);
@@ -36,6 +38,17 @@ VkCtx::~VkCtx() {
     instance.destroyDebugUtilsMessengerEXT(debug_messenger);
 #endif
     instance.destroy();
+}
+
+void VkCtx::recreate_swapchain(){
+    device.waitIdle();
+    for (int i = 0; i < swapchain_views.size();i++) {
+        device.destroyImageView(swapchain_views[i]);
+    }
+    swapchain_images.clear();
+    swapchain_views.clear();
+    device.destroySwapchainKHR(swapchain);
+    init_swapchain();
 }
 
 vk::CommandBuffer VkCtx::create_pcommand_buffer(vk::CommandPool& pool){
@@ -46,6 +59,7 @@ vk::CommandBuffer VkCtx::create_pcommand_buffer(vk::CommandPool& pool){
 
     return device.allocateCommandBuffers(alloc_info)[0];
 }
+
 
 void VkCtx::init_instance(){
 
@@ -357,5 +371,24 @@ void VkCtx::init_swapchain(){
     swapchain_ci.presentMode = swapchain_pm;
 
     swapchain = device.createSwapchainKHR(swapchain_ci);
-}
 
+    swapchain_images = device.getSwapchainImagesKHR(swapchain);
+    swapchain_views.resize(swapchain_images.size());
+    for (int i = 0; i < swapchain_views.size();i++) {
+        vk::ImageViewCreateInfo img_view_ci;
+        img_view_ci.image = swapchain_images[i];
+        img_view_ci.viewType = vk::ImageViewType::e2D;
+        img_view_ci.format = swapchain_format.format;
+        img_view_ci.components.r = vk::ComponentSwizzle::eIdentity;
+        img_view_ci.components.g = vk::ComponentSwizzle::eIdentity;
+        img_view_ci.components.b = vk::ComponentSwizzle::eIdentity;
+        img_view_ci.components.a = vk::ComponentSwizzle::eIdentity;
+        img_view_ci.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+        img_view_ci.subresourceRange.baseMipLevel = 0;
+        img_view_ci.subresourceRange.levelCount = 1;
+        img_view_ci.subresourceRange.baseArrayLayer = 0;
+        img_view_ci.subresourceRange.layerCount = 1;
+
+        swapchain_views[i] = device.createImageView(img_view_ci);
+    }
+}

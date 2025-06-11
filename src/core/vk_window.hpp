@@ -31,6 +31,8 @@ public:
         return window;
     }
 
+    void clean();
+
 private:
     SDL_Window* window = nullptr;
     std::vector<bool> keyStates;

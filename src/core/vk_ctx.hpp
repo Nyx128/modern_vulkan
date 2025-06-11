@@ -32,9 +32,15 @@ public:
     inline vk::SwapchainKHR& get_swapchain() { return swapchain; }
     inline vk::Format get_swapchain_format() { return swapchain_format.format; }
     inline vk::Extent2D get_swapchain_extent() { return swapchain_extent; }
+    std::vector<vk::Image>& get_swapchain_images() { return swapchain_images; }
+    std::vector<vk::ImageView>& get_swapchain_views() { return swapchain_views; }
 
+    void recreate_swapchain();
+    
     //create a single primary command buffer
     vk::CommandBuffer create_pcommand_buffer(vk::CommandPool& pool);
+   
+
 
 private:
     void init_instance();
@@ -94,5 +100,7 @@ private:
     vk::PresentModeKHR swapchain_pm;
     vk::Extent2D swapchain_extent;
     uint32_t swapchain_ic = 1;
+    std::vector<vk::Image> swapchain_images;
+    std::vector<vk::ImageView> swapchain_views;
 
 };
